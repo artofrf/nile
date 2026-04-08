@@ -1,3 +1,8 @@
+# ****** READ THIS ******
+# This script allows users to search for devices based on specific criteria (e.g., MAC address, device type, port, state) and then update their 
+# segment and state in bulk.
+# Dependencies: requests, python-dotenv, GET_seg.py, GET_MAB.py
+
 import json
 import requests
 import GET_seg
