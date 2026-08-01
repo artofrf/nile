@@ -49,3 +49,4 @@ htmlcov/
 # Files
 *.json
 *.log
+*.md
