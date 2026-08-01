@@ -45,3 +45,7 @@ htmlcov/
 # Environment
 .env
 .env.local
+
+# Files
+*.json
+*.log
