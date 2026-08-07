@@ -2,6 +2,7 @@ import json
 import sys
 import requests
 from pprint import pp
+import pandas as pd
 from tabulate import tabulate
 
 from dotenv import load_dotenv
@@ -14,7 +15,7 @@ load_dotenv()
 nile_apikey = os.getenv("NILE_API_TOKEN")
 
 #requested_data = input('Enter Data Requested:'  )
-url = f'https://u1.nile-global.cloud/api/v1/public/client-list-paginated-details?endTime=2025-06-19T17%3A46%3A14Z&startTime=2025-06-01T17%3A46%3A14Z&pageNumber=0&pageSize=99999'
+url = f'https://u1.nile-global.cloud/api/v1/public/client-list-paginated-details?endTime=2025-06-23T17%3A46%3A14Z&startTime=2025-06-20T17%3A46%3A14Z&pageNumber=0&pageSize=99999'
 
 payload = ''
 headers = {
@@ -22,9 +23,23 @@ headers = {
     'x-nile-api-key': nile_apikey
            }
 response = requests.get(url, headers=headers, data=payload)
-#print(response.status_code)
-api_output = response.json()
-#pp(api_output)
+
+if response.status_code != 200:
+    sys.exit(f"Error fetching devices: HTTP {response.status_code} - {response.text}")
+
+if 'application/json' not in response.headers.get('Content-Type', ''):
+    sys.exit(
+        "Error fetching devices: API did not return JSON (got "
+        f"{response.headers.get('Content-Type', 'unknown')}). This usually means "
+        "the API key was rejected and Nile returned a login page instead."
+    )
+
+try:
+    api_output = response.json()
+except json.JSONDecodeError as e:
+    sys.exit(f"Error fetching devices: failed to parse JSON response - {e}")
+
+
 
 def get_devices():
     rows = []
@@ -32,12 +47,10 @@ def get_devices():
     for client_info in client_list:
         if not isinstance(client_info, dict):
             continue
-
         if client_info.get('connectionType') == 'wireless':
             continue
-
-        if client_info.get('clientStatus') != 'ONLINE':
-            continue
+        if client_info.get('clientStatus') not in ('ONLINE', 'OFFLINE'):
+            continue #SKIP THE REST - NOT USING "IN" BECAUSE I WAN TO EXCLUDE A LONG LIST OF STATUSES
 
         row = {
             'Switch Name': client_info.get('serialName', ''),
@@ -54,4 +67,7 @@ def get_devices():
 
 if __name__ == "__main__":
     devices = get_devices()
-    print(tabulate(devices, headers="keys", tablefmt="grid"))
+    df = pd.DataFrame(devices)
+    df.to_excel("jcsu_devices.xlsx", index=False)
+    print(f"✅ Exported {len(devices)} device(s) to 'jcsu_devices.xlsx'")
+

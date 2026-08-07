@@ -1,11 +1,13 @@
 import json
+import os
 import requests
 import GET_seg
 import GET_MAB
 from pprint import pp
-from common.auth import read_yaml_nilearf
 import logging
 from datetime import datetime
+
+nile_apikey = os.getenv("NILE_API_KEY")
 
 # Setup logging
 log_filename = "bulk_device_segment_changes.log"
@@ -16,7 +18,7 @@ logging.basicConfig(
 )
 
 # Load API key
-arf_nile_apikey = read_yaml_nilearf()
+arf_nile_apikey = os.getenv("NILE_API_KEY")
 
 # Fetch segments and devices
 segments = GET_seg.get_segments()
