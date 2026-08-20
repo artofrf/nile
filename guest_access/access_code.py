@@ -5,9 +5,38 @@
 
 import requests
 from dotenv import load_dotenv
-from tabulate import tabulate
 from datetime import datetime
 import os
+
+try:
+    from tabulate import tabulate  # type: ignore[import-not-found]
+except ImportError:
+    def tabulate(rows, headers="keys", tablefmt="grid"):
+        if not rows:
+            return ""
+
+        if headers == "keys":
+            columns = list(rows[0].keys())
+        elif isinstance(headers, list):
+            columns = headers
+        else:
+            columns = []
+
+        if not columns:
+            return "\n".join(str(row) for row in rows)
+
+        widths = {
+            column: max(len(str(column)), *(len(str(row.get(column, ""))) for row in rows))
+            for column in columns
+        }
+
+        def format_row(row):
+            return " | ".join(str(row.get(column, "")).ljust(widths[column]) for column in columns)
+
+        header_line = format_row({column: column for column in columns})
+        divider = "-+-".join("-" * widths[column] for column in columns)
+        body = [format_row(row) for row in rows]
+        return "\n".join([header_line, divider, *body])
 
 # Load environment variables
 load_dotenv()
